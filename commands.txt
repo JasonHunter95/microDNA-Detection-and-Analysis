@@ -1,0 +1,49 @@
+## Create a conda environment for CircleMap
+conda create -n circlemap-env python=3.6 -y
+conda activate circlemap-env
+
+## Install CircleMap dependencies
+conda install -c bioconda -c conda-forge circle-map
+conda install -c bioconda sra-tools
+conda install -c bioconda samtools
+
+## Download the files
+fasterq-dump SRR413969 --split-files -O data/
+
+# Align to the genome using BWA
+bwa index data/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna
+
+## Align the reads to the reference genome
+## Use 4 threads for the alignment
+## Sort the output BAM file
+bwa mem -t 4 data/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna \
+    data/SRR413969_1.fastq data/SRR413969_2.fastq | \
+    samtools sort -o data/SRR413969.sorted.bam
+
+## Index the sorted BAM file
+samtools index data/SRR413969.sorted.bam
+
+## Get the queryname sorted BAM file
+samtools sort -n -o data/SRR413969.querysorted.bam data/SRR413969.sorted.bam
+
+## Run ReadExtractor
+Circle-Map ReadExtractor -i data/SRR413969.querysorted.bam -o data/SRR413969.candidates.bam
+
+## Sort and index the candidates.bam file
+samtools sort -o data/SRR413969.candidates.sorted.bam data/SRR413969.candidates.bam
+samtools index data/SRR413969.candidates.sorted.bam
+
+## Run ReAlign
+Circle-Map Realign \         
+  -i ./data/SRR413969.candidates.sorted.bam \
+  -qbam ./data/SRR413969.querysorted.bam \
+  -sbam ./data/SRR413969.sorted.bam \
+  -fasta ./data/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna \
+  -o ./data/SRR413969.eccdna.bed \
+  --split 1 \
+  --verbose 3
+
+python3 src/clean_bed.py \
+  -i temp_files_<replace_with_your_numbers>/peaks.bed \
+  -o data/SRR413969.eccdna.cleaned.bed
+
