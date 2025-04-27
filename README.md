@@ -46,17 +46,8 @@ It is designed to be run on a Linux system with a conda package manager.
 2. Create and Activate a Conda Environment
 
     ```bash
-    conda create -n circlemap-env python=3.6 -y
+    conda env create -f environment.yml
     conda activate circlemap-env
-    ```
-
-3. Install Dependencies
-
-    ```bash
-    conda install -c bioconda -c conda-forge circle-map
-    conda install -c bioconda -c conda-forge sra-tools
-    conda install -c bioconda -c conda-forge samtools
-    conda install -c bioconda -c conda-forge bedops
     ```
 
 ---
@@ -75,13 +66,16 @@ This will download the paired-end reads and save them in the `data/` directory. 
 
 The example dataset is a human sample, and the reference genome used in this example is the human genome (GRCh37). The reference genome file can be downloaded to the `data/` directory as `GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna` via executing the following shell script:
 
+Please note that this may take some time to download, as the reference genome is quite large.
+
 ```bash
-bash src/utils/download_ref_genome_1.sh
+bash src/utils/shell_scripts/get_ref_genome_1.sh
 ```
 
 ## Alignment
 
-The first step in the pipeline is to align the paired-end reads to the reference genome. The reference genome used in this example is the human genome (GRCh38).
+The first step in the pipeline is to align the paired-end reads to the reference genome. The reference genome used in this example is the human genome (GRCh37).
+This may take some time to index, please be patient.
 
 ```bash
 bwa index data/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna

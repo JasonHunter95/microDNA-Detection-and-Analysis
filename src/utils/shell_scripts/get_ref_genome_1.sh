@@ -1,13 +1,19 @@
 #!/bin/bash
 
-# download the reference genome (only chromosome 1 from GRCh37)
-# this can be modified to download other chromosomes or assemblies in the future
-echo "Downloading GRCh37 chr1 reference..."
-wget -O data/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna \
-    "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.13_GRCh37.p13/GCF_000001405.13_GRCh37.p13_genomic.fna.gz"
+# Download only chromosome 1 (GRCh37, NC_000001.10)
+echo "Downloading GRCh37 chr1 (NC_000001.10) reference..."
 
-# extract it if it's compressed, optionally
+curl -L -o data/GRCh37_chr1.fna.gz \
+    "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.13_GRCh37/GCF_000001405.13_GRCh37_genomic.fna.gz"
+
+# check if download succeeded
+if [ ! -f data/GRCh37_chr1.fna.gz ]; then
+  echo "Error: Download failed."
+  exit 1
+fi
+
+# extract it
 echo "Extracting reference..."
-gunzip -c data/GCF_000001405.13_GRCh37.p13_genomic.fna.gz > data/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna
+gunzip -c data/GRCh37_chr1.fna.gz > data/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna
 
-echo "Done!"
+echo "All done!"

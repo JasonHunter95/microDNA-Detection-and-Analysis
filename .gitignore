@@ -178,6 +178,12 @@ cython_debug/
 *.fai
 *.fna
 *.gtf
+*.gz
+
+# Ignoring some intermediate files
+*.amb
+*.ann
+*.pac
 
 # Ignoring annoying files and individual files
 .DS_Store
