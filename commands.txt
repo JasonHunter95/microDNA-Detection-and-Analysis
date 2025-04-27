@@ -6,6 +6,8 @@ conda activate circlemap-env
 conda install -c bioconda -c conda-forge circle-map
 conda install -c bioconda sra-tools
 conda install -c bioconda samtools
+conda install -c bioconda bedops
+
 
 ## Download the files
 fasterq-dump SRR413969 --split-files -O data/
@@ -47,3 +49,44 @@ python3 src/clean_bed.py \
   -i temp_files_<replace_with_your_numbers>/peaks.bed \
   -o data/SRR413969.eccdna.cleaned.bed
 
+## Annotate the eccDNA
+curl -O https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz
+gunzip gencode.v19.annotation.gtf.gz
+
+## Convert the GTF file to BED format
+gtf2bed < data/gencode.v19.annotation.gtf > data/gencode.v19.annotation.bed
+
+
+## Convert the eccDNA BED file to UCSC format
+## Replace the chromosome name from NC_000001.10 to chr1
+## This is necessary for the bedtools intersect command to work
+## The gencode annotation uses chr1, chr2, etc. as chromosome names
+## The CircleMap output uses NC_000001.10, NC_000002.11, etc. as chromosome names
+## The sed command replaces NC_000001.10 with chr1
+sed 's/^NC_000001.10/chr1/' data/SRR413969.eccdna.cleaned.bed > data/SRR413969.eccdna.cleaned.ucsc.bed
+
+## Intersect the eccDNA BED file with the Gencode annotation BED file
+bedtools intersect -a data/SRR413969.eccdna.cleaned.ucsc.bed \
+                   -b data/gencode.v19.annotation.bed \
+                   -wa -wb > data/SRR413969.eccdna.with_genes.bed
+
+## Generate a clean output of the eccDNA
+## as data/SRR413969.eccdna.annotated.tsv
+python3 src/annotate_eccdna_genes.py
+
+## Examine which genes are present in the eccDNA
+cut -f7 data/SRR413969.eccdna.annotated.tsv | sort | uniq -c | sort -nr
+
+ 567 protein_coding
+  58 lincRNA
+  43 pseudogene
+  37 antisense
+  10 processed_transcript
+   4 miRNA
+   3 sense_intronic
+   2 snRNA
+   1 gene_type
+
+## Extract the protein-coding genes from the annotated eccDNA
+## The output will be saved in the file ecc_protein_genes.txt
+awk -F'\t' '$7 == "protein_coding" {print $6}' data/SRR413969.eccdna.annotated.tsv | sort | uniq > ecc_protein_genes.txt
