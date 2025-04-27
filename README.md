@@ -59,17 +59,24 @@ To run the pipeline, you need to have paired-end sequencing data in FASTQ format
 Raw sequencing data can be fetched from the SRA database. The example dataset is from the NCBI SRA database, specifically the SRR413969 accession number.
 
 ```bash
-fasterq-dump SRR413969 --split-files -O data/
+fasterq-dump SRR413969 --split-files -O data/fastqfiles/
 ```
 
-This will download the paired-end reads and save them in the `data/` directory. The files will be named `SRR413969_1.fastq` and `SRR413969_2.fastq`.
+This will download the paired-end reads and save them in the `data/fastqfiles/` directory. The files will be named `SRR413969_1.fastq` and `SRR413969_2.fastq`.
 
-The example dataset is a human sample, and the reference genome used in this example is the human genome (GRCh37). The reference genome file can be downloaded to the `data/` directory as `GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna` via executing the following shell script:
+The example dataset is a human sample, and the reference genome used in this example is the human genome (GRCh37). The reference genome file can be downloaded to the `data/human_genome/` directory as `GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna` via executing the following shell script:
 
 Please note that this may take some time to download, as the reference genome is quite large.
 
 ```bash
-bash src/utils/shell_scripts/get_ref_genome_1.sh
+bash src/utils/shell_scripts/get_ref_genome.sh
+```
+
+You can then use the following script to extract individual chromosomes from the genome downloaded using samtools faidx. This will create a folder for each chromosome in the genome, and subsequently saves an index file for each.
+Once again, this may take a few minutes to run.
+
+```bash
+bash src/utils/shell_scripts/extract_chr.sh
 ```
 
 ## Alignment
@@ -78,13 +85,13 @@ The first step in the pipeline is to align the paired-end reads to the reference
 This may take some time to index, please be patient.
 
 ```bash
-bwa index data/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna
+bwa index data/human_genome/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna
 ```
 
 Align the reads to the reference genome using BWA, and then sort the output BAM file using Samtools. The file is sent to the data/ folder. The `-t` option specifies the threadcount to use for BWA. I only used 4 threads for this because it was done locally on my mac. This can be increased if you are running on a more powerful machine.
 
 ```bash
-bwa mem -t 4 data/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna \
+bwa mem -t 4 data/human_genome/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna \
     data/SRR413969_1.fastq data/SRR413969_2.fastq | \
     samtools sort -o data/SRR413969.sorted.bam
 ```

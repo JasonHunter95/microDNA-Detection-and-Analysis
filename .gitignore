@@ -180,10 +180,12 @@ cython_debug/
 *.gtf
 *.gz
 
-# Ignoring some intermediate files
+# Ignoring some intermediate files produced during bwa index
 *.amb
 *.ann
 *.pac
+*.bwt
+*.sa
 
 # Ignoring annoying files and individual files
 .DS_Store
