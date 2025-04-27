@@ -10,7 +10,7 @@ def most_common_char(char_list):
     return count.most_common(1)[0][0]
 
 # path to the BAM file
-bam_file = "src/SRR413984.sorted.NC_000001.10.bam"
+bam_file = "data/SRR413984.sorted.NC_000001.10.bam"
 
 
 
@@ -79,7 +79,7 @@ with pysam.AlignmentFile(bam_file, "rb") as bam:
             circle_end = read.pos + read.cigartuples[0][1]
             if len(end_window) == 0:
                 end_window.append((circle_end, get_clipped_seq(read)))
-            elif circle_end == end_window[0][0]:
+            elif circle_end == end_window[0][0]:         
                 end_window.append((circle_end, get_clipped_seq(read)))
             else:
                 if len(end_window) > min_threshold and len(end_window) < max_threshold:

@@ -26,9 +26,9 @@ def get_args():
 def main():
     args = get_args()
 
-    ref_genome = pysam.FastaFile("GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna")
+    ref_genome = pysam.FastaFile("data/GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna")
 
-    # Get the sequence from the reference genome
+    # get the sequence from the reference genome
     seq = ref_genome.fetch("NC_000001.10", args.start, args.end)
     print(seq)
 
