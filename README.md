@@ -73,6 +73,12 @@ fasterq-dump SRR413969 --split-files -O data/
 
 This will download the paired-end reads and save them in the `data/` directory. The files will be named `SRR413969_1.fastq` and `SRR413969_2.fastq`.
 
+The example dataset is a human sample, and the reference genome used in this example is the human genome (GRCh37). The reference genome file can be downloaded to the `data/` directory as `GCF_000001405.13_GRCh37_genomic.NC_000001.10.fna` via executing the following shell script:
+
+```bash
+bash src/utils/download_ref_genome_1.sh
+```
+
 ## Alignment
 
 The first step in the pipeline is to align the paired-end reads to the reference genome. The reference genome used in this example is the human genome (GRCh38).
