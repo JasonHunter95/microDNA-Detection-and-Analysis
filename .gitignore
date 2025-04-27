@@ -170,7 +170,18 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# Ignoring large files
+*.bed
+*.fastq
 *.bam
 *.bai
 *.fai
 *.fna
+*.gtf
+
+# Ignoring annoying files and individual files
+.DS_Store
+notes.txt
+
+# Ignoring temporary directories
+temp_files_*
