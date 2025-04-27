@@ -135,7 +135,7 @@ Circle-Map Realign \
 Run the following script to clean the output files:
 
 ```bash
-python3 src/clean_bed.py \
+python3 src/utils/clean_bed.py \
   -i temp_files_<replace_with_your_numbers>/peaks.bed \
   -o data/SRR413969.eccdna.cleaned.bed
 ```
@@ -172,7 +172,7 @@ python3 src/clean_bed.py \
   5. Generate a clean output of the eccDNA with gene annotations using the `annotate_eccdna_genes.py` script. This will create a new TSV file with the eccDNA coordinates and their corresponding gene annotations.
 
       ```bash
-        python3 src/annotate_eccdna_genes.py
+        python3 src/utils/annotate_eccdna_genes.py
       ```
 
 ## Results

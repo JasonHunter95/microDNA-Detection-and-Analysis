@@ -182,6 +182,7 @@ cython_debug/
 # Ignoring annoying files and individual files
 .DS_Store
 notes.txt
+ProjectMicroDNA.pdf
 
 # Ignoring temporary directories
 temp_files_*
