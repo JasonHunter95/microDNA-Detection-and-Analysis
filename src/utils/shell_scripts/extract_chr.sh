@@ -1,6 +1,9 @@
 #!/bin/bash
-
+# extract_chr.sh
 # Usage: bash src/utils/shell_scripts/extract_chr.sh
+
+# Script to extract primary chromosomes from a FASTA file and compress them
+# Author: Jason Hunter
 
 INPUT_FASTA="data/human_genome/GCF_000001405.13_GRCh37_genomic.fna"
 BASE_OUTPUT_DIR="data/human_genome"
