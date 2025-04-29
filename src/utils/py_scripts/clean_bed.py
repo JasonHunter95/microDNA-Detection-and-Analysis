@@ -1,3 +1,4 @@
+# Filename: clean_format_bed.py (Assumed name)
 import argparse
 import os
 import sys # For writing error messages to stderr
@@ -9,7 +10,7 @@ def main():
     parser.add_argument(
         "-i", "--input",
         required=True,
-        help="Path to the input BED-like file (e.g., Circle-Map output or intersect results)"
+        help="Path to the input BED-like file (e.g., Circle-Map output or cleaned BED)" # Modified help slightly
     )
     parser.add_argument(
         "-o", "--output",
@@ -23,7 +24,7 @@ def main():
     ecc_counter = 1 # Counter for generating unique names
 
     print(f"Processing file: {input_path}")
-    print(f"Outputting to: {output_path}")
+    print(f"Outputting BED6 to: {output_path}")
 
     try:
         with open(input_path, 'r') as infile, open(output_path, 'w') as outfile:
@@ -39,28 +40,38 @@ def main():
 
                 fields = stripped_line.split('\t')
 
-                # Ensure we have at least the first 4 columns needed (chrom, start, end, score/placeholder)
-                # Adjust this number if your input format guarantees fewer/more columns initially
-                if len(fields) < 4:
-                    print(f"Warning: Skipping line {line_num}. Expected at least 4 columns, found {len(fields)}: {stripped_line}", file=sys.stderr)
+                # --- Input Flexibility: Adapt based on expected input ---
+                # Expecting at least chrom, start, end from cleaned Circle-Map BED
+                # Or potentially more if input is from intersect/closest
+                if len(fields) < 3:
+                    print(f"Warning: Skipping line {line_num}. Expected at least 3 columns (chr, start, end), found {len(fields)}: {stripped_line}", file=sys.stderr)
                     continue
 
-                # Extract required fields
+                # --- Extract core BED fields ---
                 chrom = fields[0]
                 start = fields[1]
                 end = fields[2]
-                # Use the 4th column as the score. If it doesn't exist or isn't numeric,
-                # BED format often uses '0' or '1000'. Let's use the value directly if present.
-                score = fields[3]
-                # BED6 requires a strand column. Use '.' if not present or if input isn't stranded.
-                strand = '.'
+
+                # --- Assign Score ---
+                # Use column 4 if it exists and looks numeric-ish, otherwise default to '0'
+                score = '0' # Default score
+                if len(fields) > 3:
+                     # Basic check if it could be a score (integer or float representation)
+                     if fields[3].replace('.', '', 1).isdigit() or (fields[3].startswith('-') and fields[3][1:].replace('.', '', 1).isdigit()):
+                          score = fields[3]
+                     # Optional: If col 4 might be the name from an intermediate step,
+                     # you might check `len(fields) > 4` for the score instead.
+
+                # --- Assign Strand ---
+                # Use column 6 if it exists and is '+' or '-', otherwise default to '.'
+                strand = '.' # Default strand
+                if len(fields) > 5 and fields[5] in ['+', '-']:
+                    strand = fields[5]
 
                 # Generate the unique eccDNA name
-                # Using zfill for consistent padding (e.g., ecc_00001)
                 name = f"ecc_{str(ecc_counter).zfill(5)}"
 
-                # Format the output BED6 line
-                # Ensure fields are tab-separated
+                # Format the output BED6 line: chr, start, end, name, score, strand
                 output_line = f"{chrom}\t{start}\t{end}\t{name}\t{score}\t{strand}\n"
 
                 # Write to the output file
@@ -69,8 +80,8 @@ def main():
                 ecc_counter += 1
 
         processed_count = ecc_counter - 1
-        print(f"✅ Successfully processed {processed_count} records.")
-        print(f"✅ Saved cleaned BED6 file to: {os.path.abspath(output_path)}")
+        print(f"✅ Successfully formatted {processed_count} records.")
+        print(f"✅ Saved BED6 file to: {os.path.abspath(output_path)}")
 
     except FileNotFoundError:
         print(f"Error: Input file not found at {input_path}", file=sys.stderr)

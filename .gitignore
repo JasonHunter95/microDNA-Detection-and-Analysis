@@ -188,10 +188,15 @@ cython_debug/
 *.bwt
 *.sa
 
+# And the ones from bwa-mem2 index
+*.0123
+*.2bit.64
+
 # Ignoring annoying files and individual files
 .DS_Store
 notes.txt
 ProjectMicroDNA.pdf
+
 
 # Ignoring temporary directories
 temp_files_*

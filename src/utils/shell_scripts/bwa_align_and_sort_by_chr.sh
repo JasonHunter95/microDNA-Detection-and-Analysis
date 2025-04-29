@@ -30,7 +30,7 @@ mkdir -p "$OUT_DIR"
 
 # Run BWA MEM and SAMTOOLS SORT
 echo "Aligning ${SAMPLE} to ${CHR}..."
-bwa mem -t 6 "$REF" "$READ1" "$READ2" | \
-    samtools sort -@ 6 -m 2G -o "$OUT_BAM"
+bwa-mem2 mem -t 6 "$REF" "$READ1" "$READ2" | \
+    samtools sort -@ 6 -m 1G -o "$OUT_BAM"
 
 echo "Finished! Output BAM: $OUT_BAM"

@@ -22,7 +22,7 @@ echo "Indexing each chromosome..."
 for fasta in "$BASE_DIR"/chr*/chr*.fna; do
     if [ -f "$fasta" ]; then
         echo "Indexing $(basename "$fasta")..."
-        bwa index "$fasta"
+        bwa-mem2 index "$fasta"
     else
         echo "No .fna files found in $BASE_DIR/chr*/"
         exit 1

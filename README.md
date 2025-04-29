@@ -10,7 +10,7 @@
 2. [Prerequisites](#prerequisites)  
 3. [Installation](#installation)  
 4. [Data Acquisition](#data-acquisition)  
-5. [Alignment](#alignment)  
+5. [Alignment and Indexing](#alignment-and-indexing)  
 6. [eccDNA Detection](#eccdna-detection)  
 7. [Post‑processing](#post-processing)  
 8. [Annotation](#annotation)
@@ -59,7 +59,7 @@ To run the pipeline, you need to have paired-end sequencing data in FASTQ format
 Raw sequencing data can be fetched from the SRA database. The example dataset is from the NCBI SRA database, specifically the SRR413984 accession number.
 
 ```bash
-fasterq-dump SRR413969 --split-files -O data/fastqfiles/
+fasterq-dump SRR413984 --split-files -O data/fastqfiles/
 ```
 
 This will download the paired-end reads and save them in the `data/fastqfiles/` directory. The files will be named `SRR413984_1.fastq` and `SRR413984_2.fastq`.
@@ -72,14 +72,31 @@ Please note that this may take some time to download, as the reference genome is
 bash src/utils/shell_scripts/get_ref_genome.sh
 ```
 
-You can then use the following script to extract individual chromosomes from the genome downloaded using samtools faidx. This will create a folder for each chromosome in the genome, and subsequently saves an index file for each.
-Once again, this may take a few minutes to run.
+You can also use the following script to extract individual chromosomes from the genome downloaded using samtools faidx. This will create a folder for each chromosome in the genome, and subsequently saves an index file for each.
+Once again, this may take a few minutes to run. (This is unnecessary if you are using the whole genome, but is useful if you want to run the pipeline on individual chromosomes.)
+
+
+
+We also need to download the Gencode annotation file for the human genome. The Gencode annotation file is available in GTF format, and we will convert it to BED format using the `gtf2bed` command, and sort the BED file using `bedtools sort`.
+The following commands can be used to accomplish this:
 
 ```bash
-bash src/utils/shell_scripts/extract_chr.sh
+curl -L -o data/gtfs/human_genome/gencode.v19.annotation.gtf.gz \
+    https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz
+gunzip data/gtfs/human_genome/gencode.v19.annotation.gtf.gz
 ```
 
-## Alignment
+```bash
+gtf2bed < data/gtfs/human_genome/gencode.v19.annotation.gtf > data/beds/whole_genomes/human_genome/gencode.v19.annotation.bed
+```
+
+This will create a BED file with the Gencode annotation in the `data/beds/whole_genomes/human_genome/` directory.
+
+```bash
+bedtools sort -i data/beds/whole_genomes/human_genome/gencode.v19.annotation.bed > data/beds/whole_genomes/human_genome/gencode.v19.annotation.sorted.bed
+```
+
+## Alignment and Indexing
 
 The first step in the pipeline is to align the paired-end reads to the reference genome. This is done in two steps, first by indexing the reference genome and then aligning the reads to the indexed reference genome.
 
@@ -87,13 +104,10 @@ The first step in the pipeline is to align the paired-end reads to the reference
 bash src/utils/shell_scripts/index_all_chr.sh
 ```
 
-This will create an index file for each chromosome in the reference genome. The index files are used by BWA to align the reads to the reference genome.
-
-It might also be useful to index the reference genome so that individual chromosomes can be accessed quickly.
-A script which does this is also provided in the `src/utils/shell_scripts/` directory. It can be run as follows:
+To index the entire reference genome, you can use the following command:
 
 ```bash
-bash src/utils/shell_scripts/index_ref_genome.sh
+bwa-mem2 index data/human_genome/whole/GCF_000001405.13_GRCh37_genomic.fna
 ```
 
 This will create an index file for the reference genome, which is used by BWA to align the reads to the reference genome.
@@ -103,11 +117,13 @@ Alternatively, you can run the following command to index the reference genome u
 samtools faidx data/human_genome/whole/GCF_000001405.13_GRCh37_genomic.fna
 ```
 
+Both commands will create an index file for the reference genome, but the `samtools faidx` command is more efficient and faster for large genomes.
+
 This can be done for each chromosome as well with the following command:
 
 ```bash
 for i in {1..22} X Y M; do
-data/human_genome/chr1
+data/human_genome/
     samtools faidx data/human_genome/chr$i/chr$i.fna
 done
 ```
@@ -115,9 +131,9 @@ done
 Align the reads to the reference genome using BWA, and then sort the output BAM file using Samtools. The file is sent to the data/ folder. The `-t` option specifies the threadcount to use for BWA. I only used 4 threads for this because it was done locally on my mac. This can be increased if you are running on a more powerful machine.
 
 ```bash
-bwa mem -t 6 data/human_genome/chr1/chr1.fna \
+bwa-mem2 mem -t 6 data/human_genome/chr1/chr1.fna \
     data/fastqfiles/SRR413984_1.fastq data/fastqfiles/SRR413984_2.fastq | \
-    samtools sort -@ 6 -m 2G -o data/bams/chr1/SRR413984_chr1.sorted.bam
+    samtools sort -@ 6 -m 1G -o data/bams/chr1/SRR413984_chr1.sorted.bam
 ```
 
 If you want to run this for an individual chromosome, the following script can be used:
@@ -193,31 +209,7 @@ python3 src/utils/clean_bed.py \
 
   1. Annotate the eccDNA using the Gencode annotation file.
 
-      ```bash
-        curl -L -o data/gtfs/human_genome/gencode.v19.annotation.gtf.gz \
-           https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz
-        gunzip data/gtfs/human_genome/gencode.v19.annotation.gtf.gz
-      ```
 
-  2. Convert the GTF file to BED format using the `gtf2bed` command. This creates a BED file with the Gencode annotation.
-
-      ```bash
-        gtf2bed < data/gtfs/human_genome/gencode.v19.annotation.gtf > data/beds/whole_genomes/human_genome/gencode.v19.annotation.bed
-      ```
-
-      This will create a BED file with the Gencode annotation in the `data/beds/whole_genomes/human_genome/` directory.
-      To extract the chromosome 1 annotation, you can use the following command:
-
-      ```bash
-          awk -F'\t' '$1 == "chr1"' data/beds/whole_genomes/human_genome/gencode.v19.annotation.bed > data/beds/chr1/gencode_chr1.v19.annotation.bed
-      ```
-
-      This will create a BED file with the Gencode annotation for chromosome 1 in the `data/beds/chr1/` directory.
-      Then you can run the following command to filter only "gene" features from the Gencode annotation:
-
-      ```bash
-          awk '$8 == "gene"' data/beds/chr1/gencode_chr1.v19.annotation.bed > data/beds/chr1/gencode_chr1_only_genes.bed
-      ```
 
       We also need to sort our data/beds/chr1/SRR413984_chr1.eccdna.cleaned.ucsc.bed to give closest the proper inputs:
 

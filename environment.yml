@@ -10,5 +10,5 @@ dependencies:
   - sra-tools
   - samtools
   - bedops
-  - bwa
+  - bwa-mem2
   - bedtools

@@ -1,6 +1,6 @@
 import pysam
 import argparse
-import sw
+import utils.py_scripts.sw as sw
 
 def get_args():
     parser = argparse.ArgumentParser()

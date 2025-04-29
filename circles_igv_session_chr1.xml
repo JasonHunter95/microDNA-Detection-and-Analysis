@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Session genome="hg19" locus="chr1:1233438-1237032" version="8">
+    <Resources>
+        <Resource path="/Users/JasonHunter/Desktop/microDNA-Detection-and-Analysis/data/beds/chr1/gencode_chr1_only_genes.bed" type="bed"/>
+        <Resource path="/Users/JasonHunter/Desktop/microDNA-Detection-and-Analysis/data/bams/chr1/SRR413984_chr1.candidates.sorted.bam" type="bam"/>
+        <Resource path="/Users/JasonHunter/Desktop/microDNA-Detection-and-Analysis/data/beds/chr1/SRR413984_chr1.eccdna.cleaned.ucsc.sorted.bed" type="bed"/>
+    </Resources>
+    <Panel height="1591" name="Panel1745951055308" width="1495">
+        <Track attributeKey="SRR413984_chr1.candidates.sorted.bam Coverage" autoScale="true" clazz="org.broad.igv.sam.CoverageTrack" fontSize="10" height="245" id="/Users/JasonHunter/Desktop/microDNA-Detection-and-Analysis/data/bams/chr1/SRR413984_chr1.candidates.sorted.bam_coverage" name="SRR413984_chr1.candidates.sorted.bam Coverage" snpThreshold="0.2" visible="true">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="10.0" minimum="0.0" type="LINEAR"/>
+        </Track>
+        <Track attributeKey="SRR413984_chr1.candidates.sorted.bam Junctions" autoScale="false" clazz="org.broad.igv.sam.SpliceJunctionTrack" fontSize="10" groupByStrand="false" height="60" id="/Users/JasonHunter/Desktop/microDNA-Detection-and-Analysis/data/bams/chr1/SRR413984_chr1.candidates.sorted.bam_junctions" maxdepth="50" name="SRR413984_chr1.candidates.sorted.bam Junctions" visible="false"/>
+        <Track attributeKey="SRR413984_chr1.candidates.sorted.bam" clazz="org.broad.igv.sam.AlignmentTrack" color="185,185,185" displayMode="FULL" experimentType="OTHER" fontSize="10" height="246" id="/Users/JasonHunter/Desktop/microDNA-Detection-and-Analysis/data/bams/chr1/SRR413984_chr1.candidates.sorted.bam" name="SRR413984_chr1.candidates.sorted.bam" visible="true">
+            <RenderOptions duplicatesOption="FILTER"/>
+        </Track>
+    </Panel>
+    <Panel height="154" name="FeaturePanel" width="1495">
+        <Track attributeKey="SRR413984_chr1.eccdna.cleaned.ucsc.sorted.bed" clazz="org.broad.igv.track.FeatureTrack" fontSize="10" groupByStrand="false" id="/Users/JasonHunter/Desktop/microDNA-Detection-and-Analysis/data/beds/chr1/SRR413984_chr1.eccdna.cleaned.ucsc.sorted.bed" name="SRR413984_chr1.eccdna.cleaned.ucsc.sorted.bed" visible="true"/>
+        <Track attributeKey="gencode_chr1_only_genes.bed" clazz="org.broad.igv.track.FeatureTrack" fontSize="10" groupByStrand="false" id="/Users/JasonHunter/Desktop/microDNA-Detection-and-Analysis/data/beds/chr1/gencode_chr1_only_genes.bed" name="gencode_chr1_only_genes.bed" visible="true"/>
+    </Panel>
+    <PanelLayout dividerFractions="0.007947019867549669,0.7894039735099337"/>
+    <HiddenAttributes/>
+</Session>
