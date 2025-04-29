@@ -179,6 +179,7 @@ cython_debug/
 *.fna
 *.gtf
 *.gz
+*.tsv
 
 # Ignoring some intermediate files produced during bwa index
 *.amb
