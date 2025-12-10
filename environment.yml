@@ -4,11 +4,14 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.6
+  - python=3.10
   - circle-map=1.1.4
-  - biopython=1.77
+  - biopython>=1.80
   - sra-tools
   - samtools
   - bedops
   - bwa-mem2
   - bedtools
+  - pip
+  - pip:
+      - -r requirements.txt

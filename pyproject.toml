@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "microdna"
+version = "0.1.0"
+description = "A reproducible bioinformatics pipeline for detecting, extracting, and annotating microDNA"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pandas",
+    "pysam",
+    "numpy",
+    "matplotlib",
+]
+
+[project.scripts]
+microdna-clean-bed = "microdna.clean_bed:main"
+microdna-annotate-closest = "microdna.annotate_eccdna_closest:main"
+microdna-annotate-intersected = "microdna.annotate_eccdna_intersected:main"
+microdna-parse-intersected = "microdna.parse_intersected:main"
+microdna-unique-table = "microdna.unique_eccdna_table:main"
+microdna-cleaner-tsv = "microdna.cleaner_tsv:main"
+microdna-length-dist = "microdna.eccdna_length_distribution:main"
+microdna-score-dist = "microdna.eccdna_score_distribution:main"
+microdna-get-seq = "microdna.get_seq:main"
+microdna-get-soft-clips = "microdna.get_soft_clips:main"
+microdna-print-soft-clips = "microdna.print_soft_clipped_reads:main"
+microdna-sw = "microdna.sw:main"
