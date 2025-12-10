@@ -200,3 +200,6 @@ ProjectMicroDNA.pdf
 
 # Ignoring temporary directories
 temp_files_*
+
+# Ignoring ruff cache
+.ruff_cache/

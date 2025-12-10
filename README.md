@@ -1,7 +1,6 @@
 # microDNA Detection and Analysis
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-32%20passed-success.svg)]()
 
 A reproducible bioinformatics pipeline for detecting, extracting, and annotating **microDNA** (small extrachromosomal circular DNA, 100–400 bp) from high-throughput sequencing data.
@@ -289,7 +288,3 @@ This pipeline requires a Unix environment. On Windows, use **Windows Subsystem f
 - **GENCODE**: [gencodegenes.org](https://www.gencodegenes.org/)
 
 ---
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
