@@ -25,24 +25,20 @@ Extrachromosomal circular DNA (eccDNA) are DNA molecules found outside of chromo
 
 ```
 microDNA-Detection-and-Analysis/
-├── data/                       # Data directory (created during setup)
-│   ├── fastqfiles/             # Raw FASTQ reads
-│   ├── human_genome/           # Reference genome files
-│   ├── bams/                   # Alignment files
-│   ├── beds/                   # BED files (eccDNA coordinates)
-│   └── results/                # Final annotated outputs
-├── src/utils/
-│   ├── py_scripts/             # Python CLI scripts
-│   │   ├── microDNA.py         # Soft-clip based microDNA detection
-│   │   ├── clean_bed.py        # BED formatting and filtering
-│   │   ├── annotate_eccdna_closest.py    # Gene annotation (closest)
-│   │   ├── annotate_eccdna_intersected.py # Gene annotation (overlap)
-│   │   ├── gtf_parser.py       # Shared GTF/GENCODE parsing
-│   │   ├── plotting.py         # Shared visualization utilities
-│   │   └── ...                 # Additional utilities
-│   └── shell_scripts/          # Shell utility scripts
+├── data/
+│   ├── inputs/
+│   │   ├── fastq/              # Raw FASTQ reads
+│   │   └── references/
+│   │       ├── genome/         # Reference genome (GRCh37)
+│   │       └── annotations/    # GENCODE GTF/BED files
+│   ├── intermediate/           # Alignment and candidate BAMs (generated)
+│   ├── outputs/                # Final annotated results
+│   └── toy_data/               # Sample data for testing
+├── src/microdna/               # Python CLI scripts
+├── src/utils/shell_scripts/    # Shell utility scripts
 ├── tests/                      # Unit tests (32 tests)
-├── environment.yml             # Conda environment definition
+├── environment.yml             # Conda environment
+├── pyproject.toml              # Package configuration
 ├── requirements.txt            # Python dependencies
 └── README.md
 ```
@@ -119,7 +115,7 @@ All scripts are available as `microdna` modules.
 
 ```bash
 # Download sequencing reads
-fasterq-dump SRR413984 --split-files -O data/fastqfiles/
+fasterq-dump SRR413984 --split-files -O data/inputs/fastq/
 
 # Download reference genome
 bash src/utils/shell_scripts/get_ref_genome.sh
@@ -132,20 +128,20 @@ bash src/utils/shell_scripts/prepare_gencode_v19_annotation.sh
 
 ```bash
 # Index reference
-bwa-mem2 index data/human_genome/chr1/chr1.fna
-samtools faidx data/human_genome/chr1/chr1.fna
+bwa-mem2 index data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna
+samtools faidx data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna
 
 # Align and sort
-bwa-mem2 mem -t 8 data/human_genome/chr1/chr1.fna \
-    data/fastqfiles/SRR413984_1.fastq data/fastqfiles/SRR413984_2.fastq | \
-    samtools sort -@ 8 -m 1G -o data/bams/chr1/SRR413984_chr1.sorted.bam
+bwa-mem2 mem -t 8 data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna \
+    data/inputs/fastq/SRR413984_1.fastq data/inputs/fastq/SRR413984_2.fastq | \
+    samtools sort -@ 8 -m 1G -o data/intermediate/SRR413984.sorted.bam
 
 # Index BAM
-samtools index data/bams/chr1/SRR413984_chr1.sorted.bam
+samtools index data/intermediate/SRR413984.sorted.bam
 
 # Query-sort for Circle-Map
-samtools sort -n -o data/bams/chr1/SRR413984_chr1.querysorted.bam \
-    data/bams/chr1/SRR413984_chr1.sorted.bam
+samtools sort -n -o data/intermediate/SRR413984.querysorted.bam \
+    data/intermediate/SRR413984.sorted.bam
 ```
 
 ### 3. eccDNA Detection
@@ -153,21 +149,21 @@ samtools sort -n -o data/bams/chr1/SRR413984_chr1.querysorted.bam \
 ```bash
 # Extract candidate circular reads
 Circle-Map ReadExtractor \
-    -i data/bams/chr1/SRR413984_chr1.querysorted.bam \
-    -o data/bams/chr1/SRR413984_chr1.candidates.bam
+    -i data/intermediate/SRR413984.querysorted.bam \
+    -o data/intermediate/SRR413984.candidates.bam
 
 # Sort and index candidates
-samtools sort -o data/bams/chr1/SRR413984_chr1.candidates.sorted.bam \
-    data/bams/chr1/SRR413984_chr1.candidates.bam
-samtools index data/bams/chr1/SRR413984_chr1.candidates.sorted.bam
+samtools sort -o data/intermediate/SRR413984.candidates.sorted.bam \
+    data/intermediate/SRR413984.candidates.bam
+samtools index data/intermediate/SRR413984.candidates.sorted.bam
 
 # Realign to detect eccDNA
 Circle-Map Realign \
-    -i data/bams/chr1/SRR413984_chr1.candidates.sorted.bam \
-    -qbam data/bams/chr1/SRR413984_chr1.querysorted.bam \
-    -sbam data/bams/chr1/SRR413984_chr1.sorted.bam \
-    -fasta data/human_genome/chr1/chr1.fna \
-    -o data/beds/chr1/SRR413984_chr1.eccdna.bed \
+    -i data/intermediate/SRR413984.candidates.sorted.bam \
+    -qbam data/intermediate/SRR413984.querysorted.bam \
+    -sbam data/intermediate/SRR413984.sorted.bam \
+    -fasta data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna \
+    -o data/intermediate/SRR413984.eccdna.bed \
     --split 2 --threads 8
 ```
 
@@ -176,31 +172,27 @@ Circle-Map Realign \
 ```bash
 # Format to BED6 with unique IDs
 python -m microdna.clean_bed \
-    -i data/beds/chr1/SRR413984_chr1.eccdna.bed \
-    -o data/beds/chr1/SRR413984_chr1.eccdna.cleaned.bed
+    -i data/intermediate/SRR413984.eccdna.bed \
+    -o data/intermediate/SRR413984.eccdna.cleaned.bed
 ```
 
 ### 5. Annotation
 
 ```bash
-# Convert to UCSC chromosome naming
-sed 's/^NC_000001.10/chr1/' data/beds/chr1/SRR413984_chr1.eccdna.cleaned.bed \
-    > data/beds/chr1/SRR413984_chr1.eccdna.cleaned.ucsc.bed
-
 # Sort eccDNA BED
-bedtools sort -i data/beds/chr1/SRR413984_chr1.eccdna.cleaned.ucsc.bed \
-    > data/beds/chr1/SRR413984_chr1.eccdna.cleaned.ucsc.sorted.bed
+bedtools sort -i data/intermediate/SRR413984.eccdna.cleaned.bed \
+    > data/intermediate/SRR413984.eccdna.sorted.bed
 
 # Find closest genes
 bedtools closest \
-    -a data/beds/chr1/SRR413984_chr1.eccdna.cleaned.ucsc.sorted.bed \
-    -b data/beds/whole_genomes/human_genome/gencode.v19.annotation.genes.sorted.bed \
-    -d > data/beds/chr1/SRR413984_chr1.eccdna.closest_genes.bed
+    -a data/intermediate/SRR413984.eccdna.sorted.bed \
+    -b data/inputs/references/annotations/gencode.v19.annotation.genes.sorted.bed \
+    -d > data/intermediate/SRR413984.eccdna.closest_genes.bed
 
 # Generate annotated output
 python -m microdna.annotate_eccdna_closest \
-    -i data/beds/chr1/SRR413984_chr1.eccdna.closest_genes.bed \
-    -o data/results/chr1/SRR413984_chr1.eccdna.annotated.tsv
+    -i data/intermediate/SRR413984.eccdna.closest_genes.bed \
+    -o data/outputs/SRR413984.eccdna.annotated.tsv
 ```
 
 ---

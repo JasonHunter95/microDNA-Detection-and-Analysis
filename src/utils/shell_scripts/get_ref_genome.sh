@@ -8,11 +8,13 @@
 # Download the full GRCh37 genome (GCF_000001405.13_GRCh37.p13)
 echo "Downloading GRCh37 full genome reference (GCF_000001405.13)..."
 
-curl -L -o data/human_genome/whole/GCF_000001405.13_GRCh37_genomic.fna.gz \
+mkdir -p data/inputs/references/genome
+
+curl -L -o data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna.gz \
     "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.25_GRCh37.p13/GCF_000001405.25_GRCh37.p13_genomic.fna.gz"
 
 # check if download succeeded
-if [ ! -f data/human_genome/whole/GCF_000001405.13_GRCh37_genomic.fna.gz ]; then
+if [ ! -f data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna.gz ]; then
   echo "Error: Download failed."
   exit 1
 fi
@@ -21,9 +23,9 @@ fi
 echo "Download Complete! Unzipping the genome file..."
 
 # unzip the downloaded file
-gunzip data/human_genome/whole/GCF_000001405.13_GRCh37_genomic.fna.gz
+gunzip data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna.gz
 # check if unzip succeeded
-if [ ! -f data/human_genome/whole/GCF_000001405.13_GRCh37_genomic.fna ]; then
+if [ ! -f data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna ]; then
   echo "Error: Unzipping failed."
   exit 1
 fi

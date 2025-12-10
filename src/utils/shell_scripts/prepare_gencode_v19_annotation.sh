@@ -5,19 +5,17 @@
 set -e # Exit immediately if a command exits with a non-zero status
 
 # --- Directories ---
-GTF_DIR="data/gtfs/human_genome"
-BED_DIR="data/beds/whole_genomes/human_genome"
+ANNOTATIONS_DIR="data/inputs/references/annotations"
 GTF_URL="https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz"
-GTF_GZ_FILE="${GTF_DIR}/$(basename ${GTF_URL})"
-GTF_FILE="${GTF_DIR}/gencode.v19.annotation.gtf"
-FULL_BED_FILE="${BED_DIR}/gencode.v19.annotation.bed"
-GENE_BED_FILE="${BED_DIR}/gencode.v19.annotation.genes.bed"
+GTF_GZ_FILE="${ANNOTATIONS_DIR}/gencode.v19.annotation.gtf.gz"
+GTF_FILE="${ANNOTATIONS_DIR}/gencode.v19.annotation.gtf"
+FULL_BED_FILE="${ANNOTATIONS_DIR}/gencode.v19.annotation.bed"
+GENE_BED_FILE="${ANNOTATIONS_DIR}/gencode.v19.annotation.genes.bed"
 # This is the final output file needed by the main pipeline
-SORTED_GENE_BED_FILE="${BED_DIR}/gencode.v19.annotation.genes.sorted.bed"
+SORTED_GENE_BED_FILE="${ANNOTATIONS_DIR}/gencode.v19.annotation.genes.sorted.bed"
 
 echo "Creating directories..."
-mkdir -p "${GTF_DIR}"
-mkdir -p "${BED_DIR}"
+mkdir -p "${ANNOTATIONS_DIR}"
 
 # --- Check if final file already exists ---
 if [ -f "${SORTED_GENE_BED_FILE}" ]; then
