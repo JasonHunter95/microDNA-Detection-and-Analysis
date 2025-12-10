@@ -80,6 +80,36 @@ pip install -e .
 ```
 </details>
 
+### Data Setup
+
+All data acquisition runs in Docker for reproducibility.
+
+```bash
+# Download reference genome, annotations, and sample data (~15GB total)
+./docker/setup_data.sh --sample SRR413984
+
+# Align reads to reference (~2-4 hours for full sample)
+./docker/run_alignment.sh SRR413984 8
+
+# Run the complete analysis pipeline
+./docker/run_full_pipeline.sh \
+    data/intermediate/SRR413984.sorted.bam \
+    data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna \
+    data/inputs/references/annotations/gencode.v19.annotation.genes.sorted.bed \
+    data/outputs/SRR413984
+```
+
+<details>
+<summary>Setup script options</summary>
+
+```bash
+./docker/setup_data.sh --help
+./docker/setup_data.sh --skip-reference    # Skip reference genome
+./docker/setup_data.sh --skip-annotation   # Skip annotations
+./docker/setup_data.sh --skip-index        # Skip BWA indexing
+```
+</details>
+
 ---
 
 ## Pipeline Workflow
