@@ -16,7 +16,7 @@ Extrachromosomal circular DNA (eccDNA) are DNA molecules found outside of chromo
 - **Automated Detection**: Uses Circle-Map's statistical approach to identify circular DNA candidates.
 - **Size Filtering**: Filters candidates to the microDNA size range (100–400 bp).
 - **Gene Annotation**: Annotates eccDNA with nearest genes using GENCODE.
-- **Reproducible**: Conda environment ensures consistent dependencies.
+- **Reproducible**: Docker-based workflow ensures consistent results across platforms.
 - **Modular CLI Scripts**: Each pipeline step is a separate, reusable command-line tool.
 
 ---
@@ -34,9 +34,12 @@ microDNA-Detection-and-Analysis/
 │   ├── intermediate/           # Alignment and candidate BAMs (generated)
 │   ├── outputs/                # Final annotated results
 │   └── toy_data/               # Sample data for testing
+├── docker/                     # Docker configuration
+│   ├── Dockerfile.circlemap    # Circle-Map Docker image
+│   └── run_upstream_pipeline.sh # Upstream pipeline script
 ├── src/microdna/               # Python CLI scripts
 ├── src/utils/shell_scripts/    # Shell utility scripts
-├── tests/                      # Unit tests (32 tests)
+├── tests/                      # Unit tests (41 tests)
 ├── environment.yml             # Conda environment
 ├── pyproject.toml              # Package configuration
 ├── requirements.txt            # Python dependencies
@@ -49,6 +52,7 @@ microDNA-Detection-and-Analysis/
 
 ### Prerequisites
 
+- [Docker](https://docs.docker.com/get-docker/) (for Circle-Map upstream steps)
 - [Conda](https://docs.conda.io/en/latest/miniconda.html) (Miniconda or Anaconda)
 - ~50 GB disk space (for reference genome and example data)
 
@@ -138,34 +142,27 @@ bwa-mem2 mem -t 8 data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.
 
 # Index BAM
 samtools index data/intermediate/SRR413984.sorted.bam
-
-# Query-sort for Circle-Map
-samtools sort -n -o data/intermediate/SRR413984.querysorted.bam \
-    data/intermediate/SRR413984.sorted.bam
 ```
 
-### 3. eccDNA Detection
+### 3. eccDNA Detection (Docker)
+
+> **Note**: Circle-Map requires Linux. On macOS/Windows, use the Docker workflow:
 
 ```bash
-# Extract candidate circular reads
-Circle-Map ReadExtractor \
-    -i data/intermediate/SRR413984.querysorted.bam \
-    -o data/intermediate/SRR413984.candidates.bam
-
-# Sort and index candidates
-samtools sort -o data/intermediate/SRR413984.candidates.sorted.bam \
-    data/intermediate/SRR413984.candidates.bam
-samtools index data/intermediate/SRR413984.candidates.sorted.bam
-
-# Realign to detect eccDNA
-Circle-Map Realign \
-    -i data/intermediate/SRR413984.candidates.sorted.bam \
-    -qbam data/intermediate/SRR413984.querysorted.bam \
-    -sbam data/intermediate/SRR413984.sorted.bam \
-    -fasta data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna \
-    -o data/intermediate/SRR413984.eccdna.bed \
-    --split 2 --threads 8
+# Run the upstream pipeline in Docker (builds image automatically)
+./docker/run_upstream_pipeline.sh \
+    data/intermediate/SRR413984.sorted.bam \
+    data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna \
+    data/intermediate/SRR413984
 ```
+
+This script runs in Docker:
+1. Query-sort BAM
+2. Circle-Map ReadExtractor
+3. Sort/index candidate BAM  
+4. Circle-Map Realign → outputs `data/intermediate/SRR413984.eccdna.bed`
+
+
 
 ### 4. Post-processing
 
@@ -241,7 +238,7 @@ conda activate circlemap-env
 pytest tests/ -v -n auto
 ```
 
-**Current status**: 32 tests passing
+**Current status**: 41 tests passing
 
 ---
 

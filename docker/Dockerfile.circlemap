@@ -1,0 +1,28 @@
+FROM mambaorg/micromamba:1.5.8
+
+# Set up channels
+RUN micromamba config append channels bioconda && \
+    micromamba config append channels conda-forge
+
+# Install bioinformatics tools and compilers
+RUN micromamba install -y -n base \
+    python=3.10 \
+    samtools \
+    bwa-mem2 \
+    bedtools \
+    pip \
+    cxx-compiler \
+    zlib \
+    && micromamba clean --all --yes
+
+# Install Circle-Map via pip (avoids bioconda dependency conflicts)
+# Use shell with micromamba activate to ensure compiler is available
+# Pin biopython<1.78 because Circle-Map uses deprecated Bio.Alphabet
+RUN micromamba run -n base pip install --no-cache-dir "biopython==1.77" circle-map
+
+# Set working directory
+WORKDIR /data
+
+# Default command
+ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
+CMD ["Circle-Map", "--help"]
