@@ -222,6 +222,24 @@ The final annotated TSV contains:
 
 ---
 
+## Example Results
+
+### eccDNA Visualization in IGV
+
+Circular DNA candidates detected on chromosome 1, visualized in the Integrative Genomics Viewer:
+
+![eccDNA detected on chr1](figures/eccDNA_on_chr1.png)
+
+### Distribution Analysis
+
+The pipeline generates distribution plots to characterize detected eccDNA:
+
+| Length Distribution | Score Distribution |
+|:---:|:---:|
+| ![eccDNA length distribution](figures/eccDNA_length_distribution.png) | ![eccDNA score distribution](figures/eccDNA_score_distribution.png) |
+
+---
+
 ## Testing
 
 Run the test suite:
