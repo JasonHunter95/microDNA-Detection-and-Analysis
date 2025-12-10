@@ -1,7 +1,14 @@
-# Filename: clean_format_bed.py (Assumed name)
+#!/usr/bin/env python3
+"""
+clean_bed.py - Format BED-like files into BED6 format with unique eccDNA names.
+
+Processes Circle-Map output or other BED-like files to produce standard BED6
+format with unique identifiers for each eccDNA candidate.
+"""
+
 import argparse
 import os
-import sys # For writing error messages to stderr
+import sys
 
 def main():
     parser = argparse.ArgumentParser(

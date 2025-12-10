@@ -1,34 +1,18 @@
-# Filename: annotate_eccdna_intersected.py (Assumed name)
-import pandas as pd
-import re
-import argparse # Import argparse
+#!/usr/bin/env python3
+"""
+annotate_eccdna_intersected.py - Annotate eccDNA with intersecting gene information.
+
+Parses output from `bedtools intersect -wa -wb` to extract eccDNA-gene overlaps
+and GTF attributes from GENCODE annotations.
+"""
+
+import argparse
 import os
 import sys
 
-def extract_gene_info(attribute_field):
-    """
-    Parse the GTF-style attribute column (typically from column 9+ in GTF,
-    so check which column it ends up in after bedtools intersect -wb)
-    to extract multiple useful features. Robustly handles missing fields.
-    """
-    gene_id = re.search(r'gene_id "([^"]+)"', attribute_field)
-    gene_name = re.search(r'gene_name "([^"]+)"', attribute_field)
-    gene_type = re.search(r'gene_type "([^"]+)"', attribute_field)
-    transcript_id = re.search(r'transcript_id "([^"]+)"', attribute_field)
-    transcript_name = re.search(r'transcript_name "([^"]+)"', attribute_field)
-    level = re.search(r'level (\d+)', attribute_field)
-    gene_status = re.search(r'gene_status "([^"]+)"', attribute_field)
-    # Add more extractions if needed (e.g., exon_id, exon_number)
+import pandas as pd
 
-    return {
-        "gene_id": gene_id.group(1) if gene_id else None,
-        "gene_name": gene_name.group(1) if gene_name else None,
-        "gene_type": gene_type.group(1) if gene_type else None,
-        "transcript_id": transcript_id.group(1) if transcript_id else None,
-        "transcript_name": transcript_name.group(1) if transcript_name else None,
-        "level": int(level.group(1)) if level else None,
-        "gene_status": gene_status.group(1) if gene_status else None
-    }
+from .gtf_parser import extract_gene_info
 
 def main():
     # --- Add Argument Parser ---
@@ -54,13 +38,12 @@ def main():
     print(f"Outputting annotated TSV to: {output_path}")
 
     try:
-        # Define column names based on bedtools intersect -wa -wb
-        # Assumes input A (eccDNA) was BED6 and input B (annotation) was BED-like from gtf2bed
-        # Adjust num_a_cols if your input A has a different number of columns
-        num_a_cols = 6 # e.g., chr, start, end, name, score, strand
-        # The columns from B will depend on gtf2bed output. GTF has 9 columns + attributes.
-        # gtf2bed might simplify this. Let's assume the user's original parsing was correct
-        # and the important attributes are in the 16th column (index 15) overall.
+        # Define column names/indices based on bedtools intersect -wa -wb output
+        # Output: <cols from A> <cols from B>
+        # File A (eccDNA) is expected to be BED6: chr, start, end, name, score, strand
+        # File B (annotation) was derived from GTF (e.g., via gtf2bed filtered for genes)
+        # The number of cols from B depends on that conversion. Let's assume the original script's
+        # indices were correct, implying file B had at least 10 relevant columns mapped to indices 6-15.
 
         # Load the file without a header
         df = pd.read_csv(input_path, sep='\t', header=None)

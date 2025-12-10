@@ -1,37 +1,18 @@
-# Filename: annotate_eccdna_closest.py
-import pandas as pd
-import re
-import argparse # Import argparse
+#!/usr/bin/env python3
+"""
+annotate_eccdna_closest.py - Annotate eccDNA with closest gene information.
+
+Parses output from `bedtools closest -d` to extract eccDNA-gene relationships
+and GTF attributes from GENCODE annotations.
+"""
+
+import argparse
 import os
 import sys
 
-def extract_gene_info(attribute_field):
-    """
-    Parse the GTF-style attribute column (typically from column 9+ in GTF,
-    check which column it ends up in after gtf2bed conversion used as input B for closest)
-    to extract multiple useful features. Robustly handles missing fields.
-    """
-    # Ensure input is treated as a string, even if it's None or NaN from pandas
-    attribute_field = str(attribute_field) if attribute_field is not None else ""
+import pandas as pd
 
-    gene_id = re.search(r'gene_id "([^"]+)"', attribute_field)
-    gene_name = re.search(r'gene_name "([^"]+)"', attribute_field)
-    gene_type = re.search(r'gene_type "([^"]+)"', attribute_field)
-    transcript_id = re.search(r'transcript_id "([^"]+)"', attribute_field)
-    transcript_name = re.search(r'transcript_name "([^"]+)"', attribute_field)
-    level = re.search(r'level (\d+)', attribute_field)
-    gene_status = re.search(r'gene_status "([^"]+)"', attribute_field)
-    # Add more extractions if needed
-
-    return {
-        "gene_id": gene_id.group(1) if gene_id else None,
-        "gene_name": gene_name.group(1) if gene_name else None,
-        "gene_type": gene_type.group(1) if gene_type else None,
-        "transcript_id": transcript_id.group(1) if transcript_id else None,
-        "transcript_name": transcript_name.group(1) if transcript_name else None,
-        "level": int(level.group(1)) if level else None,
-        "gene_status": gene_status.group(1) if gene_status else None
-    }
+from .gtf_parser import extract_gene_info
 
 def main():
     # --- Add Argument Parser ---
@@ -69,19 +50,21 @@ def main():
         df = pd.read_csv(input_path, sep='\t', header=None)
 
         # Check if the assumed attribute and distance columns exist
-        attribute_col_index = 15 # Based on user's original code (row[15])
-        distance_col_index = 16  # Based on user's original code (row[16]) and -d behavior
+        attribute_col_index = 15  # Based on user's original code (row[15])
+        distance_col_index = 16   # Based on user's original code (row[16]) and -d behavior
+        has_distance_column = distance_col_index < df.shape[1]
 
-        if distance_col_index >= df.shape[1]:
-             print(f"Error: Expected distance column at index {distance_col_index}, but file only has {df.shape[1]} columns.", file=sys.stderr)
-             print("Did you run 'bedtools closest' with the '-d' option?", file=sys.stderr)
-             sys.exit(1)
-        if attribute_col_index >= df.shape[1]:
-             print(f"Warning: Expected attribute column at index {attribute_col_index}, using None. File has {df.shape[1]} columns.", file=sys.stderr)
-             # Allow processing to continue, but attributes will be None
+        if df.shape[1] < 16:
+            print(f"Error: Expected at least 16 columns, but file only has {df.shape[1]} columns.", file=sys.stderr)
+            sys.exit(1)
+
+        if not has_distance_column:
+            print(f"Note: No distance column found (file has {df.shape[1]} columns).")
+            print("  Assuming 'bedtools closest' was run without '-d'. Distance will be set to '.'")
+        else:
+            print(f"Parsing distance from column index {distance_col_index} (column number {distance_col_index + 1}).")
 
         print(f"Parsing attributes from column index {attribute_col_index} (column number {attribute_col_index + 1}).")
-        print(f"Parsing distance from column index {distance_col_index} (column number {distance_col_index + 1}).")
 
 
         # Parse relevant columns using indices from user's code
@@ -107,8 +90,8 @@ def main():
             # Attribute column (check if exists)
             attributes = str(row[attribute_col_index]) if attribute_col_index < df.shape[1] else None
 
-            # Distance column (already checked it exists)
-            distance = row[distance_col_index]
+            # Distance column (optional - use '.' if not present)
+            distance = row[distance_col_index] if has_distance_column else "."
 
             # Extract info from the attributes string
             extracted = extract_gene_info(attributes)
