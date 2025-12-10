@@ -202,4 +202,4 @@ ProjectMicroDNA.pdf
 temp_files_*
 
 # Ignoring ruff cache
-.ruff_cache/
+*.ruff_cache/

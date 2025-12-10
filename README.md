@@ -52,8 +52,8 @@ microDNA-Detection-and-Analysis/
 
 ### Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) (for Circle-Map upstream steps)
-- [Conda](https://docs.conda.io/en/latest/miniconda.html) (Miniconda or Anaconda)
+- [Docker](https://docs.docker.com/get-docker/) (required for full pipeline)
+- [Conda](https://docs.conda.io/en/latest/miniconda.html) (optional, for local development only)
 - ~50 GB disk space (for reference genome and example data)
 
 ### Installation
@@ -63,6 +63,14 @@ microDNA-Detection-and-Analysis/
 git clone https://github.com/JasonHunter95/microDNA-Detection-and-Analysis.git
 cd microDNA-Detection-and-Analysis
 
+# Docker images are built automatically on first run
+# No additional setup required!
+```
+
+<details>
+<summary>Optional: Local Development Setup</summary>
+
+```bash
 # Create and activate the conda environment
 conda env create -f environment.yml
 conda activate circlemap-env
@@ -70,6 +78,7 @@ conda activate circlemap-env
 # Install Python dependencies and the package in editable mode
 pip install -e .
 ```
+</details>
 
 ---
 
@@ -144,53 +153,48 @@ bwa-mem2 mem -t 8 data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.
 samtools index data/intermediate/SRR413984.sorted.bam
 ```
 
-### 3. eccDNA Detection (Docker)
+### 3. Full Pipeline (Docker)
 
-> **Note**: Circle-Map requires Linux. On macOS/Windows, use the Docker workflow:
+Run the complete pipeline in Docker with a single command:
 
 ```bash
-# Run the upstream pipeline in Docker (builds image automatically)
+./docker/run_full_pipeline.sh \
+    data/intermediate/SRR413984.sorted.bam \
+    data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna \
+    data/inputs/references/annotations/gencode.v19.annotation.genes.sorted.bed \
+    data/outputs/SRR413984
+```
+
+This runs both upstream and downstream in Docker:
+
+**Upstream** (Circle-Map):
+1. Query-sort BAM
+2. Circle-Map ReadExtractor
+3. Sort/index candidate BAM  
+4. Circle-Map Realign → outputs `*.eccdna.bed`
+
+**Downstream** (microdna):
+5. Clean BED format → `*.eccdna.cleaned.bed`
+6. Sort and find closest genes
+7. Generate annotated output → `*.eccdna.annotated.tsv`
+
+<details>
+<summary>Run upstream/downstream separately</summary>
+
+```bash
+# Upstream only
 ./docker/run_upstream_pipeline.sh \
     data/intermediate/SRR413984.sorted.bam \
     data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna \
     data/intermediate/SRR413984
+
+# Downstream only
+./docker/run_downstream_pipeline.sh \
+    data/intermediate/SRR413984.eccdna.bed \
+    data/inputs/references/annotations/gencode.v19.annotation.genes.sorted.bed \
+    data/outputs/SRR413984
 ```
-
-This script runs in Docker:
-1. Query-sort BAM
-2. Circle-Map ReadExtractor
-3. Sort/index candidate BAM  
-4. Circle-Map Realign → outputs `data/intermediate/SRR413984.eccdna.bed`
-
-
-
-### 4. Post-processing
-
-```bash
-# Format to BED6 with unique IDs
-python -m microdna.clean_bed \
-    -i data/intermediate/SRR413984.eccdna.bed \
-    -o data/intermediate/SRR413984.eccdna.cleaned.bed
-```
-
-### 5. Annotation
-
-```bash
-# Sort eccDNA BED
-bedtools sort -i data/intermediate/SRR413984.eccdna.cleaned.bed \
-    > data/intermediate/SRR413984.eccdna.sorted.bed
-
-# Find closest genes
-bedtools closest \
-    -a data/intermediate/SRR413984.eccdna.sorted.bed \
-    -b data/inputs/references/annotations/gencode.v19.annotation.genes.sorted.bed \
-    -d > data/intermediate/SRR413984.eccdna.closest_genes.bed
-
-# Generate annotated output
-python -m microdna.annotate_eccdna_closest \
-    -i data/intermediate/SRR413984.eccdna.closest_genes.bed \
-    -o data/outputs/SRR413984.eccdna.annotated.tsv
-```
+</details>
 
 ---
 

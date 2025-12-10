@@ -1,0 +1,32 @@
+# Docker Compose configuration for microDNA Detection Pipeline
+#
+# Services:
+#   circlemap  - Circle-Map upstream pipeline (ReadExtractor, Realign)
+#   microdna   - Python downstream pipeline (clean_bed, annotate)
+#
+# Usage:
+#   # Build all images
+#   docker compose -f docker/docker-compose.yml build
+#
+#   # Run a command in the microdna container
+#   docker compose -f docker/docker-compose.yml run --rm microdna \
+#       microdna.clean_bed -i data/input.bed -o data/output.bed
+
+services:
+  circlemap:
+    build:
+      context: .
+      dockerfile: Dockerfile.circlemap
+    image: microdna-circlemap:latest
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace
+
+  microdna:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.microdna
+    image: microdna-downstream:latest
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace

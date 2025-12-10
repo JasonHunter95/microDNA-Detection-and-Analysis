@@ -1,0 +1,34 @@
+# Lightweight image for downstream microDNA pipeline (post-processing + annotation)
+# 
+# Contains:
+#   - Python 3.11 with microdna package
+#   - bedtools for BED file operations
+#
+# Build:
+#   docker build -t microdna-downstream:latest -f docker/Dockerfile.microdna .
+#
+# Usage:
+#   docker run --rm -v "$(pwd):/workspace" -w /workspace microdna-downstream:latest \
+#       microdna.clean_bed -i input.bed -o output.bed
+
+FROM python:3.11-slim
+
+# Install bedtools (needed for bedtools sort/closest/intersect)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bedtools \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy package files
+COPY pyproject.toml requirements.txt ./
+COPY src/ ./src/
+
+# Install the microdna package in editable mode
+RUN pip install --no-cache-dir -e .
+
+WORKDIR /data
+
+# Default entrypoint runs Python modules
+ENTRYPOINT ["python", "-m"]
+CMD ["microdna.clean_bed", "--help"]
