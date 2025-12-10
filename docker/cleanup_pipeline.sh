@@ -15,7 +15,8 @@
 #   --execute       Actually delete the files
 #   --keep-bam      Keep the aligned BAM file (useful for future reanalysis)
 #   --keep-fastq    Keep the raw FASTQ files
-#   --all           Remove everything including FASTQ and aligned BAM
+#   --clean-index   Also remove BWA-MEM2 index files (~7GB, regenerable)
+#   --all           Remove everything including FASTQ, aligned BAM, and index
 #
 # Examples:
 #   # Preview what would be deleted (safe)
@@ -26,6 +27,9 @@
 #
 #   # Delete everything including FASTQ and aligned BAM
 #   ./docker/cleanup_pipeline.sh SRR413984 --execute --all
+#
+#   # Delete intermediates + BWA index (when done with all alignments)
+#   ./docker/cleanup_pipeline.sh SRR413984 --execute --clean-index
 
 set -e
 
@@ -44,7 +48,8 @@ usage() {
     echo "  --execute       Actually delete the files"
     echo "  --keep-bam      Keep the aligned BAM file (default)"
     echo "  --keep-fastq    Keep the raw FASTQ files (default)"
-    echo "  --all           Remove everything including FASTQ and aligned BAM"
+    echo "  --clean-index   Also remove BWA-MEM2 index files (~7GB, regenerable)"
+    echo "  --all           Remove everything including FASTQ, BAM, and index"
     echo ""
     echo "Example:"
     echo "  $0 SRR413984 --execute"
@@ -62,6 +67,7 @@ shift
 DRY_RUN=true
 KEEP_BAM=true
 KEEP_FASTQ=true
+CLEAN_INDEX=false
 
 # Parse options
 while [ "$#" -gt 0 ]; do
@@ -78,9 +84,13 @@ while [ "$#" -gt 0 ]; do
         --keep-fastq)
             KEEP_FASTQ=true
             ;;
+        --clean-index)
+            CLEAN_INDEX=true
+            ;;
         --all)
             KEEP_BAM=false
             KEEP_FASTQ=false
+            CLEAN_INDEX=true
             ;;
         *)
             echo "Unknown option: $1"
@@ -118,6 +128,14 @@ declare -a FASTQ_FILES=(
     "data/inputs/fastq/${SAMPLE_ID}_2.fastq"
     "data/inputs/fastq/${SAMPLE_ID}_1.fastq.gz"
     "data/inputs/fastq/${SAMPLE_ID}_2.fastq.gz"
+)
+
+# BWA-MEM2 index files (regenerable with ~1 hour of compute)
+declare -a BWA_INDEX_FILES=(
+    "data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna.0123"
+    "data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna.amb"
+    "data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna.ann"
+    "data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna.pac"
 )
 
 # Calculate sizes and track what to delete
@@ -219,6 +237,21 @@ for file in "${FASTQ_FILES[@]}"; do
 done
 
 echo ""
+echo "--- BWA-MEM2 Index Files ---"
+for file in "${BWA_INDEX_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        size=$(calculate_size "$file")
+        if [ "$CLEAN_INDEX" = true ]; then
+            TOTAL_SIZE=$((TOTAL_SIZE + size))
+            FILES_TO_DELETE+=("$file")
+            echo -e "  ${RED}DELETE${NC}: $file ($(human_readable_size $size))"
+        else
+            echo -e "  ${GREEN}KEEP${NC}:   $file ($(human_readable_size $size))"
+        fi
+    fi
+done
+
+echo ""
 echo "--- Final Outputs (always kept) ---"
 for file in "data/outputs/${SAMPLE_ID}.eccdna.annotated.tsv"; do
     if [ -f "$file" ]; then
@@ -246,6 +279,11 @@ if [ "$DRY_RUN" = true ]; then
         echo ""
         echo "To also remove FASTQ and aligned BAM files:"
         echo "  $0 $SAMPLE_ID --execute --all"
+    fi
+    if [ "$CLEAN_INDEX" = false ]; then
+        echo ""
+        echo "To also remove BWA-MEM2 index files (~7GB, regenerable):"
+        echo "  $0 $SAMPLE_ID --execute --clean-index"
     fi
 else
     echo -e "${RED}Deleting files...${NC}"

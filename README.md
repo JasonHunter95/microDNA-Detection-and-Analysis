@@ -36,7 +36,8 @@ microDNA-Detection-and-Analysis/
 │   └── toy_data/               # Sample data for testing
 ├── docker/                     # Docker configuration
 │   ├── Dockerfile.circlemap    # Circle-Map Docker image
-│   └── run_upstream_pipeline.sh # Upstream pipeline script
+│   ├── run_upstream_pipeline.sh # Upstream pipeline script
+│   └── cleanup_pipeline.sh     # Reclaim disk space after analysis
 ├── src/microdna/               # Python CLI scripts
 ├── src/utils/shell_scripts/    # Shell utility scripts
 ├── tests/                      # Unit tests (41 tests)
@@ -225,6 +226,23 @@ This runs both upstream and downstream in Docker:
     data/outputs/SRR413984
 ```
 </details>
+
+### 4. Cleanup (Reclaim Disk Space)
+
+After verifying your results, remove intermediate files to reclaim disk space:
+
+```bash
+# Preview what will be deleted (safe, dry-run mode)
+./docker/cleanup_pipeline.sh SRR413984
+
+# Delete intermediate files (keeps aligned BAM and FASTQ)
+./docker/cleanup_pipeline.sh SRR413984 --execute
+
+# Delete everything except final output (for HPC/cloud)
+./docker/cleanup_pipeline.sh SRR413984 --execute --all
+```
+
+> **Tip**: On HPC or cloud environments, use `--all` to minimize storage costs after confirming results.
 
 ---
 
