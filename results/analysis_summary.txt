@@ -1,0 +1,33 @@
+
+================================================================================
+                    eccDNA ANALYSIS SUMMARY REPORT
+================================================================================
+
+Data Overview
+-------------
+Total unique eccDNA detected: 39,848
+  - microDNA (<400bp):  11,549 (29.0%)
+  - eccDNA (≥400bp):    28,299 (71.0%)
+
+Size Statistics
+---------------
+  Mean:   348,115.8 bp
+  Median: 771.0 bp
+  Std:    2,397,232.6 bp
+  Range:  42 - 35,107,119 bp
+  IQR:    348.0 - 1,405.0 bp
+
+Genomic Location
+----------------
+  Genic (overlapping genes):    27,220 (68.3%)
+  Intergenic (between genes):   12,628 (31.7%)
+
+Generated Figures
+-----------------
+  1. size_distribution_comprehensive.png
+  2. gene_type_enrichment.png
+  3. eccdna_hotspots.png
+  4. distance_analysis.png
+  5. size_vs_distance.png
+
+================================================================================

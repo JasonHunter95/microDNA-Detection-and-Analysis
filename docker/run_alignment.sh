@@ -2,33 +2,44 @@
 # run_alignment.sh - Align FASTQ reads to reference genome (Docker)
 #
 # Usage:
-#   ./docker/run_alignment.sh <sample_id> [threads]
+#   ./docker/run_alignment.sh <sample_id> [threads] [ref_mode]
 #
 # Example:
 #   ./docker/run_alignment.sh SRR413984 8
+#   ./docker/run_alignment.sh SRR413984 4 chr22   # For low-memory testing
 
 set -e
 
 if [ "$#" -lt 1 ]; then
-    echo "Usage: $0 <sample_id> [threads]"
+    echo "Usage: $0 <sample_id> [threads] [ref_mode]"
     echo ""
     echo "Arguments:"
     echo "  sample_id   Sample ID (e.g., SRR413984)"
     echo "  threads     Number of threads (default: 4)"
+    echo "  ref_mode    Reference mode: 'full' (default) or 'chr22' (low-memory)"
     exit 1
 fi
 
 SAMPLE_ID="$1"
 THREADS="${2:-4}"
+REF_MODE="${3:-full}"
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$PROJECT_DIR"
 
 IMAGE_NAME="microdna-circlemap:latest"
-REFERENCE="data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna"
+
+# Select reference based on mode
+if [ "$REF_MODE" = "chr22" ]; then
+    REFERENCE="data/inputs/references/genome/chr22.fna"
+    OUTPUT_BAM="data/intermediate/${SAMPLE_ID}.chr22.sorted.bam"
+else
+    REFERENCE="data/inputs/references/genome/GCF_000001405.13_GRCh37_genomic.fna"
+    OUTPUT_BAM="data/intermediate/${SAMPLE_ID}.sorted.bam"
+fi
+
 FASTQ_1="data/inputs/fastq/${SAMPLE_ID}_1.fastq"
 FASTQ_2="data/inputs/fastq/${SAMPLE_ID}_2.fastq"
-OUTPUT_BAM="data/intermediate/${SAMPLE_ID}.sorted.bam"
 
 echo "=== Alignment Pipeline (Docker) ==="
 echo "Sample:    $SAMPLE_ID"
@@ -76,7 +87,18 @@ echo ""
 echo "✅ Alignment complete!"
 echo "Output: $OUTPUT_BAM"
 echo ""
+
+# Show appropriate next step based on reference mode
+if [ "$REF_MODE" = "chr22" ]; then
+    ANNOTATIONS="data/inputs/references/annotations/gencode.v19.chr22.genes.sorted.bed"
+    OUTPUT_PREFIX="data/outputs/${SAMPLE_ID}_chr22"
+else
+    ANNOTATIONS="data/inputs/references/annotations/gencode.v19.annotation.genes.sorted.bed"
+    OUTPUT_PREFIX="data/outputs/$SAMPLE_ID"
+fi
+
 echo "Next step:"
 echo "  ./docker/run_full_pipeline.sh $OUTPUT_BAM \\"
-echo "      $REFERENCE data/inputs/references/annotations/gencode.v19.annotation.genes.sorted.bed \\"
-echo "      data/outputs/$SAMPLE_ID"
+echo "      $REFERENCE $ANNOTATIONS \\"
+echo "      $OUTPUT_PREFIX"
+
