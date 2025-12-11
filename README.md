@@ -1,7 +1,7 @@
 # microDNA Detection and Analysis
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-32%20passed-success.svg)]()
+[![Tests](https://img.shields.io/badge/tests-41%20passed-success.svg)]()
 
 A reproducible bioinformatics pipeline for detecting, extracting, and annotating **microDNA** (small extrachromosomal circular DNA, 100–400 bp) from high-throughput sequencing data.
 
